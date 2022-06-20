@@ -7,7 +7,8 @@ router.post('/costs',(req,res)=>{
         cost = new Cost({
             description: req.body.description,
             sum: req.body.sum,
-            userId: req.body.userId
+            userId: req.body.userId,
+            category: req.body.category
         })
         cost.save().then(
             (result) => res.send(result)
