@@ -1,15 +1,53 @@
+const moment =  require('moment');
 const express = require("express")
 const Cost = require("../models/cost");
 const mongoose = require("mongoose"); // new
 const router = express.Router()
 
+
+// get cost by id
+router.get("/report/:month/:year", (req, res) => {
+    try {
+        Cost.find({
+            $expr: {
+                $and: [
+                    {
+                        "$eq": [
+                            {
+                                "$month": "$date"
+                            },
+                            req.params.month
+                        ]
+                    },
+                    {
+                        "$eq": [
+                            {
+                                "$year": "$date"
+                            },
+                            req.params.year
+                        ]
+                    }
+                ]
+            }
+        }).then(
+            (result) => res.send(result)
+        )
+    }
+    catch(err) {
+        console.log("lad")
+        res.status(400)
+        res.send({ error: "Error" })
+    }})
+
 // create cost
 router.post('/costs',(req,res)=>{
-        cost = new Cost({
+    var today = moment(new Date()).format('YYYY-MM-DD[T00:00:00.000Z]');
+    cost = new Cost({
             description: req.body.description,
             sum: req.body.sum,
             userId: req.body.userId,
-            category: req.body.category
+            category: req.body.category,
+            date: today
         })
         cost.save().then(
             (result) => res.send(result)
@@ -52,7 +90,7 @@ router.patch("/costs/:id",  (req, res) => {
 
     } catch {
         res.status(404)
-        res.send({ error: "Post doesn't exist!" })
+        res.send({ error: "Cost doesn't exist!" })
     }
 })
 router.delete("/costs/:id",  (req, res) => {
@@ -60,7 +98,7 @@ router.delete("/costs/:id",  (req, res) => {
         Cost.deleteOne({ _id: req.params.id }).then((result) => res.status(204).send())
     } catch {
         res.status(404)
-        res.send({ error: "Post doesn't exist!"})
+        res.send({ error: "Cost doesn't exist!"})
     }
 })
 
