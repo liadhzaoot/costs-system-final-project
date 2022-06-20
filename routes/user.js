@@ -2,9 +2,13 @@ const express = require("express")
 const User = require("../models/user") // new
 const router = express.Router()
 
-// create cost
+// create user
 router.post('/user',(req,res)=>{
-    user = new User({
+    if (!Date.parse(req.body.birthday)){
+        throw "birthday unvalid"
+    }
+    try{
+        user = new User({
             id: req.body.id,
             first_name: req.body.first_name,
             last_name: req.body.last_name,
@@ -12,19 +16,26 @@ router.post('/user',(req,res)=>{
             marital_status: req.body.marital_status
         })
         user.save().then(
-            (result) => res.send(result)
-        )
+            (result) => res.send(result))
     }
-)
+    catch(err){
+    res.status(200)
+    res.send({ error: "Somthing went wrong..." })
+    }
+        
+})
 
+// ger user by id
 router.get("/user/:id", (req, res) => {
     const user = User.findOne({ _id: req.params.id }).then((result) => res.send(result))
 })
 
+// get all users
 router.get("/user", (req, res) => {
     const users = User.find().then((result) => res.send(result))
 })
 
+// update user
 router.patch("/user/:id",  (req, res) => {
     try {
         const post = User.findOne({ _id: req.params.id }).then((result)=>{
@@ -47,15 +58,17 @@ router.patch("/user/:id",  (req, res) => {
 
     } catch {
         res.status(404)
-        res.send({ error: "Post doesn't exist!" })
+        res.send({ error: "User doesn't exist!" })
     }
 })
+
+//delete user
 router.delete("/user/:id",  (req, res) => {
     try {
         User.deleteOne({ _id: req.params.id }).then((result) => res.status(204).send())
     } catch {
         res.status(404)
-        res.send({ error: "Post doesn't exist!"})
+        res.send({ error: "User doesn't exist!"})
     }
 })
 
