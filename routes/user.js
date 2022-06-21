@@ -5,6 +5,15 @@ const router = express.Router()
 
 // create user
 router.post('/user', (req, res) => {
+    User.find().then((result) => {
+        let users_ids = result.map((doc) => doc.id)
+        console.log(users_ids)
+        if (users_ids.includes(req.body.id)){
+            res.status(400)
+            res.send({msg: "user already existent"})
+        }
+    })
+
     if (!Date.parse(req.body.birthday)) {
         res.status(400)
         res.send({msg: "wrong date"})
