@@ -1,7 +1,7 @@
 const moment = require('moment');
 const express = require("express")
 const Cost = require("../models/cost");
-const mongoose = require("mongoose"); // new
+const mongoose = require("mongoose"); 
 const router = express.Router()
 
 
@@ -37,8 +37,8 @@ router.get("/report/:month/:year/:userId", (req, res) => {
                 (result) => res.send(result)
             )
         }
-    } catch (err) {
-        console.log("lad")
+    } 
+    catch(err) {
         res.status(400)
         res.send({error: "Error"})
     }
