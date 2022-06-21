@@ -109,6 +109,9 @@ router.get("/costs", (req, res) => {
 router.patch("/costs/:id", (req, res) => {
     try {
         const cost = Cost.findOne({_id: req.params.id}).then((result) => {
+            if(result === null){
+                res.status(400).send({msg:"cost not found"})
+            }
             if (req.body.description) {
                 result.description = req.body.description
             }
