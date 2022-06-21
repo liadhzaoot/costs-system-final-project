@@ -2,6 +2,7 @@ const moment =  require('moment');
 const express = require("express")
 const Cost = require("../models/cost");
 const mongoose = require("mongoose"); // new
+const cwd = require('cwd');
 const router = express.Router()
 
 
@@ -57,7 +58,29 @@ router.post('/costs',(req,res)=>{
 
 // get cost by id
 router.get("/costs/:id", (req, res) => {
+    console.log(req.params.id)
     const cost = Cost.findOne({ _id: req.params.id }).then((result) => {
+        if(result === null) {
+            res.send({msg: "there is no cost"})
+        }
+        else
+            res.send(result)})
+})
+
+// get costs by userId
+router.get("/costs/:userId", (req, res) => {
+    const cost = Cost.find({ userId: req.params.userId }).then((result) => {
+        if(result === null) {
+            res.send({msg: "there is no cost"})
+        }
+        else
+            res.send(result)})
+})
+
+// get costs by category
+router.get("/costs/:category", (req, res) => {
+    console.log("###" + req.params.category)
+    const cost = Cost.find({ category: req.params.category }).then((result) => {
         if(result === null) {
             res.send({msg: "there is no cost"})
         }
@@ -67,9 +90,11 @@ router.get("/costs/:id", (req, res) => {
 
 // get all costs
 router.get("/costs", (req, res) => {
+    console.log("ALLLLLLL")
     const cost = Cost.find().then((result) => res.send(result))
 })
 
+// update cost by id
 router.patch("/costs/:id",  (req, res) => {
     try {
         const cost = Cost.findOne({ _id: req.params.id }).then((result)=>{
@@ -93,6 +118,8 @@ router.patch("/costs/:id",  (req, res) => {
         res.send({ error: "Cost doesn't exist!" })
     }
 })
+
+// delete cost by id
 router.delete("/costs/:id",  (req, res) => {
     try {
         Cost.deleteOne({ _id: req.params.id }).then((result) => res.status(204).send())

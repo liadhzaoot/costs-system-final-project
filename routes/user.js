@@ -15,11 +15,12 @@ router.post('/user',(req,res)=>{
             birthday: req.body.birthday,
             marital_status: req.body.marital_status
         })
+        res.status(201)
         user.save().then(
             (result) => res.send(result))
     }
     catch(err){
-    res.status(200)
+    res.status(400)
     res.send({ error: "Somthing went wrong..." })
     }
         
