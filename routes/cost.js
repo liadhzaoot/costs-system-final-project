@@ -1,18 +1,20 @@
 const moment = require('moment');
 const express = require("express")
 const Cost = require("../models/cost");
-const mongoose = require("mongoose"); 
+const Category = require("../models/category");
+const mongoose = require("mongoose");
 const router = express.Router()
 
 
 // get cost by id
-router.get("/report/:month/:year/:userId", (req, res) => {
+router.get("/report/:month/:year/:user_id", (req, res) => {
     try {
         if (!Date.parse(`${req.params.year}-${req.params.month}-01`)) {
             res.status(400)
             res.send({msg: "wrong month or year"})
         } else {
-            Cost.find({userId: req.params.userId ,
+            Cost.find({
+                user_id: req.params.user_id,
                 $expr: {
                     $and: [
                         {
@@ -37,8 +39,7 @@ router.get("/report/:month/:year/:userId", (req, res) => {
                 (result) => res.send(result)
             )
         }
-    } 
-    catch(err) {
+    } catch (err) {
         res.status(400)
         res.send({error: "Error"})
     }
@@ -46,19 +47,27 @@ router.get("/report/:month/:year/:userId", (req, res) => {
 
 // create cost
 router.post('/costs', (req, res) => {
-        var today = moment(new Date()).format('YYYY-MM-DD[T00:00:00.000Z]');
-        cost = new Cost({
-            description: req.body.description,
-            sum: req.body.sum,
-            userId: req.body.userId,
-            category: req.body.category,
-            date: today
-        })
-        cost.save().then(
-            (result) => res.send(result)
-        )
-    }
-)
+
+    Category.findOne({_id: req.body.category}).then((result) => {
+            if (result === null) {
+                res.status(400)
+                res.send({msg: "wrong category"})
+            } else {
+                var today = moment(new Date()).format('YYYY-MM-DD[T00:00:00.000Z]');
+                cost = new Cost({
+                    description: req.body.description,
+                    sum: req.body.sum,
+                    user_id: req.body.user_id,
+                    category: req.body.category,
+                    date: today
+                })
+                cost.save().then(
+                    (result) => res.send(result)
+                )
+            }
+        }
+    )
+})
 
 // get cost by id
 router.get("/costs/:id", (req, res) => {
@@ -71,9 +80,9 @@ router.get("/costs/:id", (req, res) => {
     })
 })
 
-// get costs by userId
-router.get("/costs/get_cost_by_userId/:userId", (req, res) => {
-    const cost = Cost.find({userId: req.params.userId}).then((result) => {
+// get costs by user_id
+router.get("/costs/get_cost_by_user_id/:user_id", (req, res) => {
+    const cost = Cost.find({user_id: req.params.user_id}).then((result) => {
         if (result === null) {
             res.send({msg: "there is no cost"})
         } else
@@ -106,8 +115,8 @@ router.patch("/costs/:id", (req, res) => {
             if (req.body.sum) {
                 result.sum = req.body.sum
             }
-            if (req.body.userId) {
-                result.userId = req.body.userId
+            if (req.body.user_id) {
+                result.user_id = req.body.user_id
             }
             if (req.body.category) {
                 result.category = req.body.category

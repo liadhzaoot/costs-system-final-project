@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 const schema = mongoose.Schema({
     description: String,
     sum: Number,
-    userId: String,
+    user_id: String,
     category: mongoose.ObjectId,
     date: Date
 })

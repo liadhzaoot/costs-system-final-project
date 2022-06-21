@@ -1,14 +1,14 @@
 const express = require("express")
 const User = require("../models/user") // new
+const Cost = require("../models/cost") // new
 const router = express.Router()
 
 // create user
-router.post('/user',(req,res)=>{
-    if (!Date.parse(req.body.birthday)){
+router.post('/user', (req, res) => {
+    if (!Date.parse(req.body.birthday)) {
         res.status(400)
         res.send({msg: "wrong date"})
-    }
-    else {
+    } else {
         try {
             user = new User({
                 id: req.body.id,
@@ -29,7 +29,7 @@ router.post('/user',(req,res)=>{
 
 // ger user by id
 router.get("/user/:id", (req, res) => {
-    const user = User.findOne({ _id: req.params.id }).then((result) => res.send(result))
+    const user = User.findOne({_id: req.params.id}).then((result) => res.send(result))
 })
 
 // get all users
@@ -38,39 +38,48 @@ router.get("/user", (req, res) => {
 })
 
 // update user
-router.patch("/user/:id",  (req, res) => {
+router.patch("/user/:id", (req, res) => {
     try {
-        const post = User.findOne({ _id: req.params.id }).then((result)=>{
+        const post = User.findOne({_id: req.params.id}).then((result) => {
             if (req.body.first_name) {
                 result.first_name = req.body.first_name
             }
-            if(req.body.last_name){
+            if (req.body.last_name) {
                 result.last_name = req.body.last_name
             }
-            if(req.body.birthday)
-            {
+            if (req.body.birthday) {
                 result.birthday = req.body.birthday
             }
-            if(req.body.marital_status)
-            {
+            if (req.body.marital_status) {
                 result.marital_status = req.body.marital_status
             }
-            result.save().then((result)=> res.send(result))
+            result.save().then((result) => res.send(result))
         })
 
     } catch {
         res.status(404)
-        res.send({ error: "User doesn't exist!" })
+        res.send({error: "User doesn't exist!"})
     }
 })
 
 //delete user
-router.delete("/user/:id",  (req, res) => {
+router.delete("/user/:id", (req, res) => {
     try {
-        User.deleteOne({ _id: req.params.id }).then((result) => res.status(204).send())
+        User.findOne({_id: req.params.id}).then((result) => {
+            if (result !== null) {
+                Cost.find({user_id: result._doc.id}).then((result) => {
+                    let cost_id_arr = result.map((doc) => doc._id)
+                    Cost.deleteMany({_id: {"$in": cost_id_arr}}).then((result) => {
+                        if (result !== null) {
+                            User.deleteOne({_id: req.params.id}).then((result) => res.status(204).send())
+                        }
+                    })
+                })
+            }
+        })
     } catch {
         res.status(404)
-        res.send({ error: "User doesn't exist!"})
+        res.send({error: "User doesn't exist!"})
     }
 })
 
