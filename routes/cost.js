@@ -1,49 +1,53 @@
-const moment =  require('moment');
+const moment = require('moment');
 const express = require("express")
 const Cost = require("../models/cost");
 const mongoose = require("mongoose"); // new
-const cwd = require('cwd');
 const router = express.Router()
 
 
 // get cost by id
-router.get("/report/:month/:year", (req, res) => {
+router.get("/report/:month/:year/:userId", (req, res) => {
     try {
-        Cost.find({
-            $expr: {
-                $and: [
-                    {
-                        "$eq": [
-                            {
-                                "$month": "$date"
-                            },
-                            req.params.month
-                        ]
-                    },
-                    {
-                        "$eq": [
-                            {
-                                "$year": "$date"
-                            },
-                            req.params.year
-                        ]
-                    }
-                ]
-            }
-        }).then(
-            (result) => res.send(result)
-        )
-    }
-    catch(err) {
+        if (!Date.parse(`${req.params.year}-${req.params.month}-01`)) {
+            res.status(400)
+            res.send({msg: "wrong month or year"})
+        } else {
+            Cost.find({userId: req.params.userId ,
+                $expr: {
+                    $and: [
+                        {
+                            "$eq": [
+                                {
+                                    "$month": "$date"
+                                },
+                                req.params.month
+                            ]
+                        },
+                        {
+                            "$eq": [
+                                {
+                                    "$year": "$date"
+                                },
+                                req.params.year
+                            ]
+                        }
+                    ]
+                }
+            }).then(
+                (result) => res.send(result)
+            )
+        }
+    } catch (err) {
         console.log("lad")
         res.status(400)
-        res.send({ error: "Error" })
-    }})
+        res.send({error: "Error"})
+    }
+})
 
 // create cost
-router.post('/costs',(req,res)=>{
-    var today = moment(new Date()).format('YYYY-MM-DD[T00:00:00.000Z]');
-    cost = new Cost({
+router.post('/costs', (req, res) => {
+        var today = moment(new Date()).format('YYYY-MM-DD[T00:00:00.000Z]');
+        cost = new Cost({
             description: req.body.description,
             sum: req.body.sum,
             userId: req.body.userId,
@@ -59,45 +63,43 @@ router.post('/costs',(req,res)=>{
 // get cost by id
 router.get("/costs/:id", (req, res) => {
     console.log(req.params.id)
-    const cost = Cost.findOne({ _id: req.params.id }).then((result) => {
-        if(result === null) {
+    const cost = Cost.findOne({_id: req.params.id}).then((result) => {
+        if (result === null) {
             res.send({msg: "there is no cost"})
-        }
-        else
-            res.send(result)})
+        } else
+            res.send(result)
+    })
 })
 
 // get costs by userId
-router.get("/costs/:userId", (req, res) => {
-    const cost = Cost.find({ userId: req.params.userId }).then((result) => {
-        if(result === null) {
+router.get("/costs/get_cost_by_userId/:userId", (req, res) => {
+    const cost = Cost.find({userId: req.params.userId}).then((result) => {
+        if (result === null) {
             res.send({msg: "there is no cost"})
-        }
-        else
-            res.send(result)})
+        } else
+            res.send(result)
+    })
 })
 
 // get costs by category
-router.get("/costs/:category", (req, res) => {
-    console.log("###" + req.params.category)
-    const cost = Cost.find({ category: req.params.category }).then((result) => {
-        if(result === null) {
+router.get("/costs/get_cost_by_category/:categoryId", (req, res) => {
+    const cost = Cost.find({category: req.params.categoryId}).then((result) => {
+        if (result === null) {
             res.send({msg: "there is no cost"})
-        }
-        else
-            res.send(result)})
+        } else
+            res.send(result)
+    })
 })
 
 // get all costs
 router.get("/costs", (req, res) => {
-    console.log("ALLLLLLL")
     const cost = Cost.find().then((result) => res.send(result))
 })
 
 // update cost by id
-router.patch("/costs/:id",  (req, res) => {
+router.patch("/costs/:id", (req, res) => {
     try {
-        const cost = Cost.findOne({ _id: req.params.id }).then((result)=>{
+        const cost = Cost.findOne({_id: req.params.id}).then((result) => {
             if (req.body.description) {
                 result.description = req.body.description
             }
@@ -110,22 +112,22 @@ router.patch("/costs/:id",  (req, res) => {
             if (req.body.category) {
                 result.category = req.body.category
             }
-            result.save().then((result)=> res.send(result))
+            result.save().then((result) => res.send(result))
         })
 
     } catch {
         res.status(404)
-        res.send({ error: "Cost doesn't exist!" })
+        res.send({error: "Cost doesn't exist!"})
     }
 })
 
 // delete cost by id
-router.delete("/costs/:id",  (req, res) => {
+router.delete("/costs/:id", (req, res) => {
     try {
-        Cost.deleteOne({ _id: req.params.id }).then((result) => res.status(204).send())
+        Cost.deleteOne({_id: req.params.id}).then((result) => res.status(204).send())
     } catch {
         res.status(404)
-        res.send({ error: "Cost doesn't exist!"})
+        res.send({error: "Cost doesn't exist!"})
     }
 })
 
