@@ -6,7 +6,7 @@ const userRouts = require("./routes/user")
 
 const app = express();
 const port = 3000;
-mongoose.connect('mongodb://localhost:27017/');
+mongoose.connect("mongodb+srv://liaddvir:meTorJlKh5Fu5cDj@cluster0.nxphvfl.mongodb.net/test");
 var db = mongoose.connection;
 //response as Json
 app.use(express.json());
