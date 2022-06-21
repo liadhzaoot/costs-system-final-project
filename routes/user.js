@@ -5,25 +5,26 @@ const router = express.Router()
 // create user
 router.post('/user',(req,res)=>{
     if (!Date.parse(req.body.birthday)){
-        throw "birthday unvalid"
+        res.status(400)
+        res.send({msg: "wrong date"})
     }
-    try{
-        user = new User({
-            id: req.body.id,
-            first_name: req.body.first_name,
-            last_name: req.body.last_name,
-            birthday: req.body.birthday,
-            marital_status: req.body.marital_status
-        })
-        res.status(201)
-        user.save().then(
-            (result) => res.send(result))
+    else {
+        try {
+            user = new User({
+                id: req.body.id,
+                first_name: req.body.first_name,
+                last_name: req.body.last_name,
+                birthday: req.body.birthday,
+                marital_status: req.body.marital_status
+            })
+            res.status(201)
+            user.save().then(
+                (result) => res.send(result))
+        } catch (err) {
+            res.status(400)
+            res.send({error: "Somthing went wrong..."})
+        }
     }
-    catch(err){
-    res.status(400)
-    res.send({ error: "Somthing went wrong..." })
-    }
-        
 })
 
 // ger user by id
