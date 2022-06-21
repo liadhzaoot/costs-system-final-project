@@ -5,35 +5,36 @@ const router = express.Router()
 
 // create user
 router.post('/user', (req, res) => {
-    User.find().then((result) => {
-        let users_ids = result.map((doc) => doc.id)
-        console.log(users_ids)
-        if (users_ids.includes(req.body.id)){
-            res.status(400)
-            res.send({msg: "user already existent"})
-        }
-    })
-
-    if (!Date.parse(req.body.birthday)) {
-        res.status(400)
-        res.send({msg: "wrong date"})
-    } else {
+    User.findOne({id: req.body.id}).then((result) => {
         try {
-            user = new User({
-                id: req.body.id,
-                first_name: req.body.first_name,
-                last_name: req.body.last_name,
-                birthday: req.body.birthday,
-                marital_status: req.body.marital_status
-            })
-            res.status(201)
-            user.save().then(
-                (result) => res.send(result))
+            if (result)
+                res.status(400).send({msg: "user already exist"})
+            else {
+                if (!Date.parse(req.body.birthday)) {
+                    res.status(400)
+                    res.send({msg: "wrong date"})
+                } else {
+
+                    user = new User({
+                        id: req.body.id,
+                        first_name: req.body.first_name,
+                        last_name: req.body.last_name,
+                        birthday: req.body.birthday,
+                        marital_status: req.body.marital_status,
+                        sum: 0
+                    })
+                    res.status(201)
+                    user.save().then(
+                        (result) => res.send(result))
+                }
+            }
         } catch (err) {
             res.status(400)
             res.send({error: "Somthing went wrong..."})
         }
-    }
+    })
+
+
 })
 
 // ger user by id

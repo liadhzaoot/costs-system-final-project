@@ -2,9 +2,35 @@ const moment = require('moment');
 const express = require("express")
 const Cost = require("../models/cost");
 const Category = require("../models/category");
+const User = require("../models/user");
 const mongoose = require("mongoose");
 const router = express.Router()
 
+function updateRecord(recordId, valuesToSet) {
+    mongo_filter = {'id': recordId}
+    new_values = {'$set': valuesToSet}
+    return User.updateOne(mongo_filter, new_values)
+}
+function setUserSum(newSum,userId,res,costRes,method,lastCostSum){
+    if (method === "POST") {
+        User.findOne({id: userId}).then((result) => {
+            let userNewSum = result.sum + newSum
+            return updateRecord(userId, {sum: userNewSum}).then((userRes)=>res.send(costRes))
+        })
+    }
+    else if (method === "PATCH"){
+        User.findOne({id: userId}).then((result) => {
+            let userNewSum = result.sum - lastCostSum + newSum
+            updateRecord(userId, {sum: userNewSum}).then((userRes)=>console.log(costRes))
+        })
+    }
+    else if(method === "DELETE"){
+        User.findOne({id: userId}).then((result) => {
+            let userNewSum = result.sum - newSum
+            updateRecord(userId, {sum: userNewSum}).then((userRes)=>console.log(costRes))
+        })
+    }
+}
 
 // get cost by id
 router.get("/report/:month/:year/:user_id", (req, res) => {
@@ -52,7 +78,8 @@ router.post('/costs', (req, res) => {
             if (result === null) {
                 res.status(400)
                 res.send({msg: "wrong category"})
-            } else {
+            }
+            else {
                 var today = moment(new Date()).format('YYYY-MM-DD[T00:00:00.000Z]');
                 cost = new Cost({
                     description: req.body.description,
@@ -62,7 +89,9 @@ router.post('/costs', (req, res) => {
                     date: today
                 })
                 cost.save().then(
-                    (result) => res.send(result)
+                    (result) => {
+                        setUserSum(req.body.sum,req.body.user_id,res,result,"POST",null)
+                    }
                 )
             }
         }
@@ -109,22 +138,27 @@ router.get("/costs", (req, res) => {
 router.patch("/costs/:id", (req, res) => {
     try {
         const cost = Cost.findOne({_id: req.params.id}).then((result) => {
-            if(result === null){
-                res.status(400).send({msg:"cost not found"})
+            if (result === null) {
+                res.status(400).send({msg: "cost not found"})
             }
-            if (req.body.description) {
-                result.description = req.body.description
+            else {
+                if (req.body.description) {
+                    result.description = req.body.description
+                }
+                if (req.body.sum) {
+                    setUserSum(req.body.sum,result.user_id,res,result,"PATCH",result.sum)
+                    result.sum = req.body.sum
+                }
+                if (req.body.user_id) {
+                    result.user_id = req.body.user_id
+                }
+                if (req.body.category) {
+                    result.category = req.body.category
+                }
+                result.save().then((result) => {
+                    res.send(result)
+                })
             }
-            if (req.body.sum) {
-                result.sum = req.body.sum
-            }
-            if (req.body.user_id) {
-                result.user_id = req.body.user_id
-            }
-            if (req.body.category) {
-                result.category = req.body.category
-            }
-            result.save().then((result) => res.send(result))
         })
 
     } catch {
@@ -136,7 +170,13 @@ router.patch("/costs/:id", (req, res) => {
 // delete cost by id
 router.delete("/costs/:id", (req, res) => {
     try {
-        Cost.deleteOne({_id: req.params.id}).then((result) => res.status(204).send())
+        Cost.findOne({_id: req.params.id}).then((costResult)=>{
+            Cost.deleteOne({_id: req.params.id}).then((result) =>{
+                setUserSum(costResult.sum,costResult.user_id,res,costResult,"DELETE",null)
+                res.status(204).send()
+            } )
+        })
+
     } catch {
         res.status(404)
         res.send({error: "Cost doesn't exist!"})

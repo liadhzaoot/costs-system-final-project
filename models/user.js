@@ -8,7 +8,8 @@ var UserSchema = new Schema({
   first_name: String,
   last_name: String,
   birthday: Date,
-  marital_status: String
+  marital_status: String,
+  sum: Number
 });
 
 module.exports = mongoose.model('User', UserSchema);
